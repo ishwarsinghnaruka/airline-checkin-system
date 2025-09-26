@@ -4,8 +4,9 @@
   "type": "module",
   "scripts": {
     "build": "npx tsc",
-    "start": "npm run deploy && node dist/app.js",
-    "deploy": "npx prisma migrate deploy",
+    "start": "node dist/app.js",
+    "postinstall": "npx prisma generate",
+    "deploy": "npx prisma migrate deploy && npm run seed",
     "dev": "nodemon src/app.ts",
     "seed": "npx ts-node prisma/seed.ts"
   },
