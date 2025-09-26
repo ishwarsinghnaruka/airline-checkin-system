@@ -67,6 +67,72 @@ app.get("/health", async (req, res) => {
     });
   }
 });
+// Add this route for manual seeding
+app.post("/admin/seed-database", async (req, res) => {
+  try {
+    console.log("Starting database seeding...");
+
+    // Clear existing data
+    await prisma.booking.deleteMany();
+    await prisma.seat.deleteMany();
+    await prisma.passenger.deleteMany();
+    await prisma.flight.deleteMany();
+
+    // Create flight
+    const flight = await prisma.flight.create({
+      data: {
+        flightNumber: "AA123",
+        departure: "New York (JFK)",
+        arrival: "Los Angeles (LAX)",
+        departureTime: new Date("2024-12-01T08:00:00Z"),
+        arrivalTime: new Date("2024-12-01T11:30:00Z"),
+        aircraftType: "Boeing 737",
+        totalSeats: 96,
+      },
+    });
+
+    // Create seats
+    const seats = [];
+    for (let row = 10; row <= 25; row++) {
+      for (const letter of ["A", "B", "C", "D", "E", "F"]) {
+        seats.push({
+          flightId: flight.id,
+          seatNumber: `${row}${letter}`,
+          seatType: "ECONOMY",
+          price: 100.0,
+        });
+      }
+    }
+
+    await prisma.seat.createMany({ data: seats });
+
+    // Create test passengers and bookings
+    for (let i = 1; i <= 100; i++) {
+      const passenger = await prisma.passenger.create({
+        data: {
+          firstName: `Passenger${i}`,
+          lastName: `Test`,
+          email: `passenger${i}@test.com`,
+          phone: `+123456789${String(i).padStart(2, "0")}`,
+        },
+      });
+
+      await prisma.booking.create({
+        data: {
+          pnr: `PNR${String(i).padStart(3, "0")}`,
+          flightId: flight.id,
+          passengerId: passenger.id,
+          status: "CONFIRMED",
+        },
+      });
+    }
+
+    res.json({ success: true, message: "Database seeded successfully" });
+  } catch (error) {
+    console.error("Seeding error:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // PNR Login Endpoint
 app.post("/checkin/login", async (req, res) => {
