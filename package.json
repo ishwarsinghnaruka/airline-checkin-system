@@ -4,8 +4,8 @@
   "type": "module",
   "scripts": {
     "build": "npx tsc",
-    "start": "node dist/app.js",
-    "start:prod": "npx cross-env NODE_ENV=production node dist/app.js",
+    "start": "npm run deploy && node dist/app.js",
+    "deploy": "npx prisma migrate deploy",
     "dev": "nodemon src/app.ts",
     "seed": "npx ts-node prisma/seed.ts"
   },
