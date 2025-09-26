@@ -1,0 +1,85 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Flight {
+  id            Int       @id @default(autoincrement())
+  flightNumber  String    @unique
+  departure     String
+  arrival       String
+  departureTime DateTime
+  arrivalTime   DateTime
+  aircraftType  String
+  totalSeats    Int
+  seats         Seat[]
+  bookings      Booking[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@map("flights")
+}
+
+model Seat {
+  id          Int       @id @default(autoincrement())
+  flightId    Int
+  seatNumber  String
+  seatType    SeatType
+  isAvailable Boolean   @default(true)
+  price       Decimal   @db.Decimal(8, 2)
+  flight      Flight    @relation(fields: [flightId], references: [id])
+  booking     Booking?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([flightId, seatNumber])
+  @@map("seats")
+}
+
+model Passenger {
+  id        Int       @id @default(autoincrement())
+  firstName String
+  lastName  String
+  email     String    @unique
+  phone     String
+  bookings  Booking[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@map("passengers")
+}
+
+model Booking {
+  id          Int           @id @default(autoincrement())
+  pnr         String        @unique
+  flightId    Int
+  passengerId Int
+  seatId      Int?          @unique
+  bookingTime DateTime      @default(now())
+  checkedIn   Boolean       @default(false)
+  status      BookingStatus @default(CONFIRMED)
+  flight      Flight        @relation(fields: [flightId], references: [id])
+  passenger   Passenger     @relation(fields: [passengerId], references: [id])
+  seat        Seat?         @relation(fields: [seatId], references: [id])
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@map("bookings")
+}
+
+enum SeatType {
+  ECONOMY
+  BUSINESS
+  FIRST_CLASS
+  EXIT_ROW
+}
+
+enum BookingStatus {
+  CONFIRMED
+  CANCELLED
+  CHECKED_IN
+}
